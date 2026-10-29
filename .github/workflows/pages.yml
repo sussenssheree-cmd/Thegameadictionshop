@@ -1,0 +1,46 @@
+
+name: Publish Shazzz Add-on Forge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download website files
+        uses: actions/checkout@v4
+
+      - name: Prepare website
+        run: |
+          mkdir -p site
+          unzip -o Shazzz_Addon_Forge_Final.zip -d site
+          test -f site/index.html
+          unzip -t site/downloads/Shazzz_Starter_Addon.mcaddon
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4
